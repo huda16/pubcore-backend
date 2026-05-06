@@ -1,0 +1,738 @@
+basePath: /
+definitions:
+  helpers.CommonErrorResponse:
+    properties:
+      error:
+        example: Bad Request
+        type: string
+      message: {}
+      statusCode:
+        example: 400
+        type: integer
+    type: object
+  helpers.CommonResponse:
+    properties:
+      data: {}
+      message:
+        example: Success
+        type: string
+      meta:
+        $ref: '#/definitions/helpers.Meta'
+      statusCode:
+        example: 200
+        type: integer
+    type: object
+  helpers.LoginInput:
+    properties:
+      email:
+        example: john@example.com
+        type: string
+      password:
+        example: secret123
+        type: string
+    type: object
+  helpers.Meta:
+    properties:
+      currentPage:
+        example: 1
+        type: integer
+      from:
+        example: 1
+        type: integer
+      lastPage:
+        example: 5
+        type: integer
+      limit:
+        example: 10
+        type: integer
+      to:
+        example: 10
+        type: integer
+      total:
+        example: 42
+        type: integer
+    type: object
+  helpers.RegisterInput:
+    properties:
+      bio:
+        example: A passionate reader
+        type: string
+      email:
+        example: john@example.com
+        type: string
+      password:
+        example: secret123
+        type: string
+      username:
+        example: johndoe
+        type: string
+    type: object
+  models.Authors:
+    properties:
+      bio:
+        type: string
+      books:
+        items:
+          $ref: '#/definitions/models.Books'
+        type: array
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      nationality:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.Books:
+    properties:
+      author:
+        $ref: '#/definitions/models.Authors'
+      author_id:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      genre:
+        type: string
+      id:
+        type: integer
+      isbn:
+        type: string
+      publisher:
+        $ref: '#/definitions/models.Publishers'
+      publisher_id:
+        type: integer
+      title:
+        type: string
+      updated_at:
+        type: string
+      year:
+        type: integer
+    type: object
+  models.Publishers:
+    properties:
+      address:
+        type: string
+      books:
+        items:
+          $ref: '#/definitions/models.Books'
+        type: array
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+      website:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@pubcore.io
+    name: API Support
+  description: Publishing platform API for managing Books, Authors, and Publishers.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: PubCore API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return a JWT token
+      parameters:
+      - description: User Login Input
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/helpers.LoginInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.CommonResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helpers.CommonErrorResponse'
+      summary: Login with email and password
+      tags:
+      - Auth
+  /auth/logout:
+    post:
+      description: Invalidate the session (client-side token removal)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.CommonResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helpers.CommonErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Logout the current user
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account
+      parameters:
+      - description: User Registration Input
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/helpers.RegisterInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/helpers.CommonResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.CommonErrorResponse'
+      summary: Register a new user
+      tags:
+      - Auth
+  /authors:
+    get:
+      description: Retrieve a paginated, filterable, sortable list of authors
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - default: created_at
+        description: Sort field (e.g. name, created_at)
+        in: query
+        name: sort
+        type: string
+      - default: desc
+        description: Sort order (asc or desc)
+        in: query
+        name: order
+        type: string
+      - description: Filter by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Filter by nationality
+        in: query
+        name: nationality
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.CommonResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helpers.CommonErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.CommonErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List all authors
+      tags:
+      - Authors
+    post:
+      consumes:
+      - application/json
+      description: Add a new author to the platform
+      parameters:
+      - description: Author Input
+        in: body
+        name: author
+        required: true
+        schema:
+          $ref: '#/definitions/models.Authors'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/helpers.CommonResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.CommonErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new author
+      tags:
+      - Authors
+  /authors/{id}:
+    delete:
+      description: Remove an author by ID (only if they have no books)
+      parameters:
+      - description: Author ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.CommonResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.CommonErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.CommonErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete an author
+      tags:
+      - Authors
+    get:
+      description: Retrieve an author and their books by ID
+      parameters:
+      - description: Author ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Authors'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a single author by ID
+      tags:
+      - Authors
+    put:
+      consumes:
+      - application/json
+      description: Modify author details by ID
+      parameters:
+      - description: Author ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Author Update Input
+        in: body
+        name: author
+        required: true
+        schema:
+          $ref: '#/definitions/models.Authors'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Authors'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update an existing author
+      tags:
+      - Authors
+  /books:
+    get:
+      description: Retrieve a paginated, filterable, sortable list of books
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - default: created_at
+        description: Sort field (e.g. title, year, created_at)
+        in: query
+        name: sort
+        type: string
+      - default: desc
+        description: Sort order (asc or desc)
+        in: query
+        name: order
+        type: string
+      - description: Filter by title
+        in: query
+        name: title
+        type: string
+      - description: Filter by genre
+        in: query
+        name: genre
+        type: string
+      - description: Filter by publication year
+        in: query
+        name: year
+        type: integer
+      - description: Filter by author ID
+        in: query
+        name: author_id
+        type: integer
+      - description: Filter by publisher ID
+        in: query
+        name: publisher_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.CommonResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helpers.CommonErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List all books
+      tags:
+      - Books
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Book Input
+        in: body
+        name: book
+        required: true
+        schema:
+          $ref: '#/definitions/models.Books'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Books'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new book
+      tags:
+      - Books
+  /books/{id}:
+    delete:
+      parameters:
+      - description: Book ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a book
+      tags:
+      - Books
+    get:
+      description: Retrieve a book with its Author and Publisher
+      parameters:
+      - description: Book ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Books'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a book by ID
+      tags:
+      - Books
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Book ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Book Update Input
+        in: body
+        name: book
+        required: true
+        schema:
+          $ref: '#/definitions/models.Books'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Books'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a book
+      tags:
+      - Books
+  /publishers:
+    get:
+      description: Retrieve a paginated, filterable, sortable list of publishers
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - default: created_at
+        description: Sort field
+        in: query
+        name: sort
+        type: string
+      - default: desc
+        description: Sort order (asc or desc)
+        in: query
+        name: order
+        type: string
+      - description: Filter by name
+        in: query
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.CommonResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helpers.CommonErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List all publishers
+      tags:
+      - Publishers
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Publisher Input
+        in: body
+        name: publisher
+        required: true
+        schema:
+          $ref: '#/definitions/models.Publishers'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Publishers'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new publisher
+      tags:
+      - Publishers
+  /publishers/{id}:
+    delete:
+      parameters:
+      - description: Publisher ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a publisher
+      tags:
+      - Publishers
+    get:
+      parameters:
+      - description: Publisher ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Publishers'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get a publisher by ID
+      tags:
+      - Publishers
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Publisher ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Publisher Update Input
+        in: body
+        name: publisher
+        required: true
+        schema:
+          $ref: '#/definitions/models.Publishers'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Publishers'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a publisher
+      tags:
+      - Publishers
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

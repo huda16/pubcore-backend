@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    container_name: pubcore_app
+    restart: unless-stopped
+    environment:
+      PORT: ${PORT:-8080}
+      PGHOST: ${PGHOST}
+      PGUSER: ${PGUSER}
+      PGPASSWORD: ${PGPASSWORD}
+      PGPORT: ${PGPORT:-5432}
+      PGDATABASE: ${PGDATABASE}
+      PGSSLMODE: ${PGSSLMODE:-disable}
+      JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
+    ports:
+      - "${PORT:-8080}:8080"
